@@ -1,12 +1,16 @@
 name: Build Release
 
 on:
-  workflow_dispatch: # 允许手动触发执行
+  workflow_dispatch:
+
+env:
+  # 强制使用 Node.js 24 以消除警告并适配 2026 年新规
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
     name: Build APK and Windows
-    runs-on: windows-latest # 使用 Windows 虚拟机，可以同时编译 Android 和 Windows
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code
@@ -24,11 +28,16 @@ jobs:
           channel: 'stable'
           cache: true
 
+      # 关键步骤：清理缓存，防止旧环境导致的构建错误
+      - name: Flutter Clean
+        run: flutter clean
+
       - name: Get dependencies
         run: flutter pub get
 
+      # 增加 --no-tree-shake-icons 避免因图标导致的部分编译失败
       - name: Build Android APK
-        run: flutter build apk --release
+        run: flutter build apk --release --no-tree-shake-icons
 
       - name: Build Windows
         run: flutter build windows --release
